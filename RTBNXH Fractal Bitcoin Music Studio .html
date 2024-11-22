@@ -1,0 +1,939 @@
+<html><head><base href=""><title>RTBNXH OS</title>
+<style>
+/* General Reset and Core styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+/* Smooth window animations */
+.os-window {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  min-width: 250px; /* Reduced from 300px */
+  min-height: 150px; /* Reduced from 200px */
+  width: 80vw; /* Reduced from 90vw */
+  max-width: 500px; /* Reduced from 600px */
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+#os-system {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url('https://ordinals.fractalbitcoin.io/content/210c6cfc202a443043e888f491644fb36338e81433634159d601da5a7f4bc91ei0') center/cover no-repeat;
+  position: relative;
+  display: none; /* Hide OS initially */
+}
+
+/* Update desktop area to fill available space */
+#desktop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 50px; /* Match taskbar height */
+  overflow: auto;
+  padding: 20px;
+}
+
+/* Enhance taskbar appearance */
+#taskbar {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.5);
+  overflow-x: auto;
+  z-index: 9999;
+}
+
+/* Enhance start button */
+#start-button {
+  width: 100px;
+  height: 40px;
+  background: linear-gradient(145deg, #2980b9, #3498db);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+#start-button:hover {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+#taskbar-clock {
+  color: white;
+  margin-left: auto; /* This pushes the clock to the right */
+  padding: 0 15px;
+  font-size: 14px;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  min-width: 100px;
+  justify-content: center;
+}
+
+/* Start menu styles */
+#start-menu {
+  position: absolute;
+  bottom: 60px;
+  left: 10px;
+  width: 300px;
+  backdrop-filter: blur(15px);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+  color: white;
+  overflow-y: auto;
+  max-height: 70vh;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.app {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+  transition: all 0.2s ease;
+}
+
+.app:hover {
+  transform: translateY(-3px);
+}
+
+.app div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  color: white;
+}
+
+.app img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.app:hover img {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.app span {
+  color: white;
+  margin-top: 5px;
+  font-size: 12px; /* Add this line to make text smaller */
+}
+
+.bg-option {
+  margin: 5px 0;
+  padding: 8px;
+  cursor: pointer;
+  color: #00d1ff;
+  transition: background 0.2s;
+}
+
+.bg-option:hover {
+  background: rgba(0, 209, 255, 0.2);
+  border-radius: 4px;
+}
+
+.bg-option[onclick="exitOS()"] {
+  margin-top: 20px;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.bg-option[onclick="exitOS()"]:hover {
+  background: rgba(255, 0, 0, 0.2);
+}
+
+#start-menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+#start-menu li {
+  margin: 10px 0;
+}
+
+#start-menu a {
+  text-decoration: none;
+  color: #00ffcc;
+  font-weight: bold;
+  display: block;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+#start-menu a:hover {
+  color: #ff9900;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.os-window-content {
+  flex-grow: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  min-height: 150px; /* Reduced from 200px */
+}
+
+/* Enhanced window header */
+.os-window-header {
+  padding: 10px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  cursor: move;
+}
+
+/* Enhanced window controls */
+.close-btn, .minimize-btn, .fullscreen-btn {
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.close-btn:hover, .minimize-btn:hover, .fullscreen-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Add styles for splash screen */
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #000000, #1a1a1a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  color: white;
+}
+
+#splash-logo {
+  margin-bottom: 20px;
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+#enter-button {
+  padding: 15px 40px;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  background: linear-gradient(145deg, #2980b9, #3498db);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  display: none;
+  animation: pulse 1.5s infinite;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+#enter-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+#loading-text {
+  font-size: 24px;
+  margin-top: 20px;
+}
+
+/* Add to existing CSS */
+.os-window.fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  z-index: 9999 !important;
+}
+
+/* Add styles for the fullscreen button */
+.fullscreen-btn {
+  background: #3498db;
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.fullscreen-btn:hover {
+  background: #2980b9;
+}
+
+.os-window-title {
+  color: white;
+  font-weight: bold;
+}
+
+.close-btn {
+  background: #e74c3c;
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+
+.app-button {
+  background: #16a085;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.app-button:hover {
+  background: #1abc9c;
+}
+
+/* Add media queries for better mobile responsiveness */
+@media screen and (max-width: 768px) {
+  .os-window {
+    min-width: 200px; /* Reduced from 250px */
+    min-height: 120px; /* Reduced from 150px */
+    width: 90vw;
+  }
+  
+  .os-window-content {
+    min-height: 120px; /* Reduced from 150px */
+  }
+
+  .os-window-header {
+    padding: 8px; /* Slightly smaller padding */
+  }
+
+  .close-btn {
+    width: 20px; /* Smaller close button */
+    height: 20px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+}
+
+/* Add to existing CSS */
+.minimize-btn {
+  background: #f1c40f; /* Yellow color for minimize */
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.minimize-btn:hover {
+  background: #f39c12;
+}
+
+/* Add styles for minimized windows in taskbar */
+.taskbar-app {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  color: white;
+  padding: 5px 15px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.taskbar-app:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  transform: translateY(-1px);
+}
+
+.minimized {
+  display: none !important;
+}
+
+.about-content {
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 150px);
+  line-height: 1.6;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.about-content h1 {
+  font-size: 28px;
+  margin-bottom: 25px;
+  color: #3498db;
+  border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+  padding-bottom: 10px;
+}
+
+.about-content p {
+  margin-bottom: 15px;
+  text-align: justify;
+}
+
+.about-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
+</head>
+<body>
+<div id="splash-screen">
+  <svg id="splash-logo" width="200" height="200" viewBox="0 0 200 200">
+    <rect width="200" height="200" fill="#2980b9" rx="20"/>
+    <text x="100" y="110" text-anchor="middle" fill="white" font-size="40" font-family="Arial">RTBNXH</text>
+  </svg>
+  <div id="loading-text">Loading RTBNXH OS...</div>
+  <button id="enter-button">Press Start to Enter</button>
+</div>
+  <div id="os-system">
+    <div id="desktop">
+      <div class="app" onclick="openHelp()">
+        <div>
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <rect width="60" height="60" rx="12" fill="#2980b9"/>
+            <text x="30" y="35" text-anchor="middle" fill="white" font-size="40" font-family="Arial">?</text>
+          </svg>
+          <span style="color: white; margin-top: 5px; font-size: 12px;">Help Guide</span>
+        </div>
+      </div>
+      <div class="app" onclick="openAbout()">
+        <div>
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <rect width="60" height="60" rx="12" fill="#27ae60"/>
+            <text x="30" y="35" text-anchor="middle" fill="white" font-size="30" font-family="Arial">i</text>
+          </svg>
+          <span style="color: white; margin-top: 5px;">About BAW</span>
+        </div>
+      </div>
+      <!-- Rest of desktop content -->
+    </div>
+    
+    <div id="taskbar">
+      <button id="start-button">Start</button>
+      <div id="taskbar-clock"></div>
+    </div>
+
+    <div id="start-menu">
+      <h2>Applications</h2>
+      <ul>
+        <li><a href="#" onclick="openApp('Craps', 'https://fractal-static.unisat.io/content/67924bd7a23c0faeb13bfec3ea8e6db8da3209db0094fac14102ad6400663b0di0')">Craps</a></li>
+        <li><a href="#" onclick="openApp('Memory Match', 'https://ordinals.fractalbitcoin.io/content/f0f05a8b2f4b1d0a273bc6c248520b1f9176d635306b56cafcbcd48bfa00f3f4i0')">Memory Match</a></li>
+        <li><a href="#" onclick="openApp('Beat Maker', 'https://ordinals.fractalbitcoin.io/content/48fcdc41f1a7b7741dd84eebceb6c0574f38f01457bee731d5223507c108b500i0')">Time to Make a Beat</a></li>
+        <li><a href="#" onclick="openApp('Digital Clock', 'https://ordinals.fractalbitcoin.io/content/0af2b8b321a415b11a63b291d8efcb826ad8791cbc2cd6cf679b9879f85d6c14i0')">Digital Clock</a></li>
+        <li><a href="#" onclick="openApp('DAW V3', 'https://ordinals.fractalbitcoin.io/content/39110a4e3628fba3ee38e97d4e4deafa9c4bee1057e9e730883cd2b971dc9f96i0')">Fractal Bitcoin Audio Workstation V3</a></li>
+        <li><a href="#" onclick="openApp('Electronic Piano', 'https://ordinals.fractalbitcoin.io/content/44204b7fab516f0001ba92599b126072b9033371fbc532667d720e310be0db5fi0')">Electronic Piano</a></li>
+        <li><a href="#" onclick="openApp('FB DJ', 'https://ordinals.fractalbitcoin.io/content/ea4031b59d50816c442df23d996066a43f2bc1f38fb4023ff65e6aeb17d98979i0')">Fractal Bitcoin DJ</a></li>
+        <li><a href="#" onclick="openApp('Sampler V1', 'https://ordinals.fractalbitcoin.io/content/b9cbf1f46fd110c737ec489c429663da1bcf73390fe683bc3fc91bdb2fdb4a2ai0')">Sampler V1</a></li>
+        <li><a href="#" onclick="openApp('DeWaynGitBeats', 'https://ordinals.fractalbitcoin.io/content/e716d51e3fa1f7ad8b1743008af94e2ee2f634fcc7553d0e6d0c246dcb645fd1i0')">DeWaynGitBeats</a></li>
+        <li><a href="#" onclick="openApp('FB DD RTBNXH V2', 'https://ordinals.fractalbitcoin.io/content/e49b07e629055bb39395fcdf59e5c9e80bbe232d2a904139c1d03112957f0a41i0')">FB DD RTBNXH V2</a></li>
+        <li><a href="#" onclick="openApp('FB Noob Beat Maker', 'https://ordinals.fractalbitcoin.io/content/66f3bb3efff6a753dd4f82b4550883680cfdd020ded7d6c401bbfd2c1272608fi0')">FB Noob Level Beat Maker</a></li>
+        <li><a href="#" onclick="openApp('FB Beat Sequencer', 'https://ordinals.fractalbitcoin.io/content/423fa1e8a7253be0b61d22a9cf4119ccc48872bfe61a5e2765d27de7944b1249i0')">FB Beat Sequencer</a></li>
+        <li><a href="#" onclick="openApp('FB Acid Synth', 'https://ordinals.fractalbitcoin.io/content/5b671a111fb114f5223d7bbc8341a63dee63f458c8cb95b269fd0e06fe0e7849i0')">FB Acid Synth</a></li>
+        <li><a href="#" onclick="openApp('FB Audio Tool', 'https://fractal-static.unisat.io/content/77b86528b5b07f4dbb52dcdd8348a0f84c034250b9874bb1c8f8cf7d7c9a7627i0')">Fractal Bitcoin Audio Tool</a></li>
+        <li><a href="#" onclick="openApp('YouTube', 'https://youtube.com/embed/LsL0duPLV80')">YouTube</a></li>
+        <li><a href="#" onclick="openApp('Telegram', 'https://t.me/RTBNXH')">Telegram</a></li>
+      </ul>
+      
+      <h3>Change Background</h3>
+      <div class="bg-option" onclick="setBackground('https://ordinals.fractalbitcoin.io/content/210c6cfc202a443043e888f491644fb36338e81433634159d601da5a7f4bc91ei0')">
+        NXH4L
+      </div>
+      <div class="bg-option" onclick="setBackground('https://ordinals.fractalbitcoin.io/content/aaa83300ff835ef65faabfbd42719f2db5404f95d67d612e8ee0fd3d3bff434fi0')">
+        N
+      </div>
+      <div class="bg-option" onclick="setBackground('https://ordinals.fractalbitcoin.io/content/e16c11dbb97e5ba0678bf30fb482bd6804907da851c7c584a6938714f286213ai0')">
+        Stage
+      </div>
+      <div class="bg-option" onclick="setBackground('https://ordinals.fractalbitcoin.io/content/6e38acb4e1a8a0c8d8474f40e712840b5c851a80ee7b5b7e03d48407cee3e37ai0')">
+        NextHustle Stage
+      </div>
+      <div class="bg-option" onclick="setBackground('https://ordinals.fractalbitcoin.io/preview/c4e5904465787e7bf9cde009fc6fb98b00bed362e58f23c9ccc6492a7d4a31f1i0')">
+        NextHustle Stage 2
+      </div>
+      
+      <h3>System</h3>
+      <div class="bg-option" onclick="exitOS()" style="color: #ff4444;">
+        Exit OS
+      </div>
+    </div>
+
+    <div id="os-window-template" class="os-window hidden">
+      <div class="os-window-header">
+        <span class="os-window-title">App</span>
+        <button class="minimize-btn" title="Minimize">_</button>
+        <button class="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+        <button class="close-btn">X</button>
+      </div>
+      <iframe class="os-window-content" src="" allow="autoplay"></iframe>
+    </div>
+  </div>
+
+  <script>
+window.addEventListener('error', function(e) {
+  console.error('Global error:', e.error);
+});
+
+// Initialize OS
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // Initialize variables
+    window.activeWindows = window.activeWindows || [];
+    window.zIndex = 1000;
+    
+    // Initialize OS
+    fixTaskbarPosition();
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Set up event listeners with error handling
+    const enterButton = document.getElementById('enter-button');
+    const startButton = document.getElementById('start-button');
+    
+    if (enterButton) {
+      enterButton.addEventListener('click', enterOS);
+    }
+    
+    if (startButton) {
+      startButton.addEventListener('click', toggleStartMenu);
+    }
+    
+    // Show enter button after loading
+    setTimeout(() => {
+      const loadingText = document.getElementById('loading-text');
+      if (loadingText) loadingText.style.display = 'none';
+      
+      if (enterButton) enterButton.style.display = 'block';
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Error initializing OS:', error);
+  }
+});
+
+// Enhanced openApp function with error handling
+function openApp(title, url) {
+  try {
+    // Close start menu
+    document.getElementById('start-menu').style.display = 'none';
+
+    // Create new window with error handling
+    const desktop = document.getElementById('desktop');
+    const template = document.getElementById('os-window-template');
+    
+    if (!desktop || !template) {
+      console.error('Required elements not found');
+      return;
+    }
+    
+    const newWindow = template.cloneNode(true);
+    newWindow.classList.remove('hidden');
+    newWindow.id = `window-${Date.now()}`;
+    
+    // Set up window content with enhanced security
+    const titleElem = newWindow.querySelector('.os-window-title');
+    const iframe = newWindow.querySelector('.os-window-content');
+    
+    if (titleElem) titleElem.textContent = title;
+    if (iframe) {
+      // Add error handling for iframe
+      iframe.onerror = (err) => {
+        console.error('Iframe error:', err);
+        iframe.srcdoc = '<h2>Error loading content. Please try again.</h2>';
+      };
+      
+      // Set proper sandbox permissions
+      iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals';
+      iframe.allow = 'autoplay; camera; microphone; fullscreen';
+      
+      // Load URL with error handling
+      try {
+        iframe.src = url;
+      } catch (err) {
+        console.error('Error setting iframe src:', err);
+        iframe.srcdoc = '<h2>Error loading content. Please try again.</h2>';
+      }
+    }
+    
+    // Position window
+    const offset = activeWindows.length * 30;
+    newWindow.style.left = `${50 + offset}px`;
+    newWindow.style.top = `${50 + offset}px`;
+    newWindow.style.zIndex = zIndex++;
+    
+    // Set up window controls
+    setupWindowControls(newWindow);
+    
+    desktop.appendChild(newWindow);
+    activeWindows.push(newWindow);
+    updateTaskbar();
+    
+  } catch (error) {
+    console.error('Error opening app:', error);
+  }
+}
+
+// Add helper function for window controls
+function setupWindowControls(window) {
+  // Close button
+  const closeBtn = window.querySelector('.close-btn');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      try {
+        window.remove();
+        activeWindows = activeWindows.filter(w => w !== window);
+        updateTaskbar();
+      } catch (err) {
+        console.error('Error closing window:', err);
+      }
+    };
+  }
+  
+  // Minimize button
+  const minimizeBtn = window.querySelector('.minimize-btn');
+  if (minimizeBtn) {
+    minimizeBtn.onclick = () => {
+      try {
+        window.classList.add('minimized');
+        updateTaskbar();
+      } catch (err) {
+        console.error('Error minimizing window:', err);
+      }
+    };
+  }
+  
+  // Fullscreen button
+  const fullscreenBtn = window.querySelector('.fullscreen-btn');
+  if (fullscreenBtn) {
+    fullscreenBtn.onclick = () => {
+      try {
+        window.classList.toggle('fullscreen');
+      } catch (err) {
+        console.error('Error toggling fullscreen:', err);
+      }
+    };
+  }
+}
+
+let activeWindows = [];
+let zIndex = 1000;
+
+// Fix taskbar positioning
+function fixTaskbarPosition() {
+  const taskbar = document.getElementById('taskbar');
+  if (taskbar) {
+    taskbar.style.position = 'fixed';
+    taskbar.style.bottom = '0';
+    taskbar.style.left = '0';
+    taskbar.style.zIndex = '9999';
+  }
+}
+
+// Enter OS function
+function enterOS() {
+  document.getElementById('splash-screen').style.display = 'none';
+  document.getElementById('os-system').style.display = 'block';
+}
+
+// Toggle start menu
+function toggleStartMenu() {
+  const startMenu = document.getElementById('start-menu');
+  startMenu.style.display = startMenu.style.display === 'flex' ? 'none' : 'flex';
+}
+
+// Update clock
+function updateClock() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString();
+  document.getElementById('taskbar-clock').textContent = timeStr;
+}
+
+// Set background
+function setBackground(url) {
+  document.getElementById('os-system').style.background = `url('${url}') center/cover no-repeat`;
+  document.getElementById('start-menu').style.display = 'none';
+}
+
+// Exit OS
+function exitOS() {
+  document.getElementById('os-system').style.display = 'none';
+  document.getElementById('splash-screen').style.display = 'flex';
+  document.getElementById('loading-text').style.display = 'block';
+  document.getElementById('enter-button').style.display = 'none';
+  
+  // Clean up any open windows
+  activeWindows.forEach(window => window.remove());
+  activeWindows = [];
+}
+
+// Help and About functions
+function openHelp() {
+  const content = `
+    <div class="about-content">
+      <div class="about-section">
+        <h1>Help Guide</h1>
+        <p><strong>Welcome to RTBNXH OS!</strong> Here's how to use the system:</p>
+        
+        <h3>Basic Navigation</h3>
+        <ul>
+          <li>Click the Start button to access all applications and system options</li>
+          <li>Drag windows by their title bars to move them around</li>
+          <li>Use the window controls to minimize, maximize, or close applications</li>
+          <li>The taskbar shows currently running applications</li>
+        </ul>
+
+        <h3>Applications</h3>
+        <p>RTBNXH OS includes various audio and music creation tools:</p>
+        <ul>
+          <li>DAW V3 - Digital Audio Workstation</li>
+          <li>Beat Maker - Create rhythms and beats</li>
+          <li>Electronic Piano - Virtual piano interface</li>
+          <li>FB DJ - DJ mixing software</li>
+          <li>And many more!</li>
+        </ul>
+
+        <h3>Customization</h3>
+        <p>You can customize your experience by:</p>
+        <ul>
+          <li>Changing the background through the Start menu</li>
+          <li>Arranging windows to your preferred layout</li>
+          <li>Using the minimize/maximize buttons to manage window sizes</li>
+        </ul>
+      </div>
+    </div>
+  `;
+
+  const helpWindow = document.getElementById('os-window-template').cloneNode(true);
+  helpWindow.classList.remove('hidden');
+  helpWindow.querySelector('.os-window-title').textContent = 'Help Guide';
+  helpWindow.querySelector('.os-window-content').srcdoc = content;
+  
+  const offset = activeWindows.length * 30;
+  helpWindow.style.left = `${50 + offset}px`;
+  helpWindow.style.top = `${50 + offset}px`;
+  helpWindow.style.zIndex = zIndex++;
+
+  const closeBtn = helpWindow.querySelector('.close-btn');
+  closeBtn.onclick = () => {
+    helpWindow.remove();
+    activeWindows = activeWindows.filter(w => w !== helpWindow);
+  };
+
+  document.getElementById('desktop').appendChild(helpWindow);
+  activeWindows.push(helpWindow);
+}
+
+function openAbout() {
+  const content = `
+    <div class="about-content">
+      <div class="about-section">
+        <h1>About RTBNXH OS</h1>
+        <p>RTBNXH OS is a web-based operating system designed for musicians, producers, and audio enthusiasts. It provides a comprehensive suite of music production and audio tools directly in your browser.</p>
+        
+        <h3>Features</h3>
+        <ul>
+          <li>Integrated Digital Audio Workstation</li>
+          <li>Multiple Beat Making Tools</li>
+          <li>Virtual Instruments</li>
+          <li>Audio Effects Processing</li>
+          <li>DJ Mixing Capabilities</li>
+        </ul>
+
+        <h3>Mission</h3>
+        <p>Our mission is to make music production accessible to everyone by providing professional-grade tools in an easy-to-use interface. RTBNXH OS represents the next generation of web-based audio production.</p>
+
+        <h3>Version</h3>
+        <p>RTBNXH OS v1.0</p>
+        <p>© 2024 RTBNXH. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  const aboutWindow = document.getElementById('os-window-template').cloneNode(true);
+  aboutWindow.classList.remove('hidden');
+  aboutWindow.querySelector('.os-window-title').textContent = 'About';
+  aboutWindow.querySelector('.os-window-content').srcdoc = content;
+  
+  const offset = activeWindows.length * 30;
+  aboutWindow.style.left = `${50 + offset}px`;
+  aboutWindow.style.top = `${50 + offset}px`;
+  aboutWindow.style.zIndex = zIndex++;
+
+  const closeBtn = aboutWindow.querySelector('.close-btn');
+  closeBtn.onclick = () => {
+    aboutWindow.remove();
+    activeWindows = activeWindows.filter(w => w !== aboutWindow);
+  };
+
+  document.getElementById('desktop').appendChild(aboutWindow);
+  activeWindows.push(aboutWindow);
+}
+
+// Make windows draggable
+document.addEventListener('mousedown', function(e) {
+  const header = e.target.closest('.os-window-header');
+  if (!header) return;
+
+  const window = header.closest('.os-window');
+  if (!window) return;
+
+  // Bring window to front
+  window.style.zIndex = zIndex++;
+
+  const rect = window.getBoundingClientRect();
+  const initialX = e.clientX - rect.left;
+  const initialY = e.clientY - rect.top;
+
+  function mouseMoveHandler(e) {
+    handleDrag(e, window, initialX, initialY);
+  }
+
+  function mouseUpHandler() {
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+  }
+
+  document.addEventListener('mousemove', mouseMoveHandler);
+  document.addEventListener('mouseup', mouseUpHandler);
+});
+
+// Improved handleDrag function
+function handleDrag(e, window, initialX, initialY) {
+  if (!window || !e) return;
+  
+  const desktop = document.getElementById('desktop');
+  if (!desktop) return;
+  
+  e.preventDefault();
+  
+  // Get desktop bounds accounting for taskbar
+  const desktopRect = desktop.getBoundingClientRect();
+  const taskbarHeight = document.getElementById('taskbar').offsetHeight;
+  
+  // Calculate new position
+  let newX = Math.max(0, Math.min(e.clientX - initialX, desktopRect.width - window.offsetWidth));
+  let newY = Math.max(0, Math.min(e.clientY - initialY, desktopRect.height - window.offsetHeight - taskbarHeight));
+  
+  // Set position
+  window.style.left = `${newX}px`;
+  window.style.top = `${newY}px`;
+}
+
+// Add updateTaskbar function
+function updateTaskbar() {
+  const taskbar = document.getElementById('taskbar');
+  const existingTabs = taskbar.querySelectorAll('.taskbar-app');
+  existingTabs.forEach(tab => tab.remove());
+  
+  activeWindows.forEach(window => {
+    const title = window.querySelector('.os-window-title').textContent;
+    const tab = document.createElement('div');
+    tab.className = 'taskbar-app';
+    tab.textContent = title;
+    tab.onclick = () => {
+      window.classList.remove('minimized');
+      window.style.zIndex = zIndex++;
+    };
+    taskbar.insertBefore(tab, taskbar.querySelector('#taskbar-clock'));
+  });
+}
+  </script>
+</body></html>
